@@ -115,93 +115,120 @@ class ckan::config(
   python::pip { $pip_pkgs_remote:
     virtualenv    => $virtual_env_dir,
     ensure        => present,
+    owner         => $ckan_user,
+  }
+
+  file { $virtual_env_dir:
+    ensure => 'directory',
+    owner  => 'root',
+    group  => 'root',
+  } ->
+  exec { "set ${virtual_env_dir} permissions":
+    command => "chown -R ${ckan_user}:${ckan_group} ${virtual_env_dir}",
+    path          => '/usr/bin:/usr/sbin:/bin',
+    user          => 'root',
   }
 
   python::virtualenv { $virtual_env_dir:
     ensure        => present,
     owner         => $ckan_user,
     group         => $ckan_group,
+    require       => Exec["set ${virtual_env_dir} permissions"],
   }
 
   python::pip { 'ckan':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckan@release-v2.2-dgu',
+    owner         => $ckan_user,
   }
 
   python::pip { 'ckanext-dgu':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-dgu@stable',
+    owner         => $ckan_user,
   }
 
   python::pip { 'ckanext-os':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-os@master',
+    owner         => $ckan_user,
   }
 
   python::pip { 'ckanext-qa':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-qa@2.0',
+    owner         => $ckan_user,
   }
 
   python::pip { 'ckanext-spatial':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-spatial@dgu',
+    owner         => $ckan_user,
   }
 
   python::pip { 'ckanext-harvest':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-harvest@2.0',
+    owner         => $ckan_user,
   } ->
-
   python::pip { 'ckanext-archiver':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-archiver@master',
+    owner         => $ckan_user,
   }
+
   python::pip { 'ckanext-report':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-report@master',
+    owner         => $ckan_user,
   }
   python::pip { 'ckanext-ga-report':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-ga-report@master',
+    owner         => $ckan_user,
   }
 
   python::pip { 'ckanext-datapreview':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-datapreview@master',
+    owner         => $ckan_user,
   }
 
   python::pip { 'ckanext-importlib':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/okfn/ckanext-importlib@master',
+    owner         => $ckan_user,
   }
 
   python::pip { 'ckanext-hierarchy':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-hierarchy@master',
+    owner         => $ckan_user,
   }
 
   python::pip { 'logreporter':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-hierarchy@master',
+    owner         => $ckan_user,
   }
 
   python::pip { 'ckanext-dgu-local':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-dgu-local@master',
+    owner         => $ckan_user,
   }
 
   file {$ckan_log_file:
     ensure        => file,
-    owner         => 'www-data',
-    group         => 'www-data',
+    owner         => $ckan_user, #'www-data',
+    group         => $ckan_group, #'www-data',
     mode          => 664,
   }
 
-  file { [$ckan_log_root, $ckan_root, "${ckan_root}/data","${ckan_root}/sstore"]:
+  file { [$ckan_log_root, $ckan_root, "${ckan_root}/data", "${ckan_root}/sstore"]:
     ensure        => directory,
-    owner         => "www-data",
-    group         => "www-data",
+    owner         => $ckan_user, #'www-data',
+    group         => $ckan_group, #'www-data',
     mode          => 664,
   }
 
@@ -213,8 +240,8 @@ class ckan::config(
     file { $path:
       ensure      => file,
       content     => template('ckan/ckan.ini.erb'),
-      owner       => 'www-data',
-      group       => 'www-data',
+      owner         => $ckan_user, #'www-data',
+      group         => $ckan_group, #'www-data',
       mode        => 664,
     }
   }
@@ -227,8 +254,8 @@ class ckan::config(
   file { $ckan_who_ini:
     ensure        => file,
     content       => template('ckan/who.ini.erb'),
-    owner         => 'www-data',
-    group         => 'www-data',
+    owner         => $ckan_user, #'www-data',
+    group         => $ckan_group, #'www-data',
     mode          => 664,
   }
 
@@ -322,7 +349,7 @@ class ckan::config(
     require                    => [
       Exec['createdb utf8_template'],
       Postgresql::Server::Role[$ckan_test_db_user],
-      Class["postgresql::server"],
+      Class['postgresql::server'],
     ],
   }
 
@@ -333,9 +360,13 @@ class ckan::config(
     ],
     command                    => "${virtual_env_dir}/bin/paster --plugin=ckan db init --config=${ckan_root}/ckan.ini",
     path                       => '/usr/bin:/bin',
-    user                       => 'root',
+    user                       => $ckan_user,
     unless                     => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep package",
     logoutput                  => true,
+    require                    => [
+      Python::Pip['psycopg2==2.4.5'],
+      Python::Pip['ckanext-harvest'],
+    ]
   }
 
   exec { 'paster ga_reports init':
@@ -343,7 +374,7 @@ class ckan::config(
     cwd                        => "${virtual_env_dir}/src/ckanext-ga-report",
     command                    => "${virtual_env_dir}/bin/paster initdb --config=${ckan_root}/ckan.ini",
     path                       => '/usr/bin:/bin:/usr/sbin',
-    user                       => 'root',
+    user                       => $ckan_user,
     unless                     => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep ga_url",
     logoutput                  => true,
   }
@@ -352,7 +383,7 @@ class ckan::config(
     subscribe => Exec['paster db init'],
     command   => "${virtual_env_dir}/bin/paster --plugin=ckanext-dgu inventory_init --config=${ckan_root}/ckan.ini",
     path      => '/usr/bin:/bin:/usr/sbin',
-    user      => 'www-data',
+    user      => $ckan_user, #'www-data',
     unless    => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep ga_url",
     logoutput => true,
   }
@@ -361,7 +392,7 @@ class ckan::config(
     subscribe => Exec['paster db init'],
     command   => "${virtual_env_dir}/bin/paster --plugin=ckanext-dgu-local dgulocal init --config=${ckan_root}/ckan.ini",
     path      => '/usr/bin:/bin:/usr/sbin',
-    user      => 'root',
+    user      => $ckan_user,
     unless    => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep organization_extent",
     logoutput => 'on_failure',
   }
@@ -369,7 +400,7 @@ class ckan::config(
     subscribe => Exec['paster db init'],
     command   => "${virtual_env_dir}/bin/paster --plugin=ckanext-archiver archiver init --config=${ckan_root}/ckan.ini",
     path      => '/usr/bin:/bin:/usr/sbin',
-    user      => 'root',
+    user      => $ckan_user,
     unless    => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep archival",
     logoutput => 'on_failure',
   }
@@ -377,7 +408,7 @@ class ckan::config(
     subscribe => Exec["paster db init"],
     command   => "${virtual_env_dir}/bin/paster --plugin=ckanext-qa qa init --config=${ckan_root}/ckan.ini",
     path      => '/usr/bin:/bin:/usr/sbin',
-    user      => 'root',
+    user      => $ckan_user,
     unless    => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep qa",
     logoutput => 'on_failure',
   }
@@ -389,7 +420,7 @@ class ckan::config(
   }
 
   # @todo move this to its own module
-  package {"rabbitmq-server":
+  package { 'rabbitmq-server':
     ensure => present,
   }
 
