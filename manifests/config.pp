@@ -11,8 +11,14 @@ class ckan::config(
     dev => true,  #required for pip to install dependencies
   }
 
+  if ! defined(Package['libxslt1-dev'])         {
+    package { 'libxslt1-dev':
+      ensure => present,
+      alias => 'libxslt-dev'
+    }
+  }
+
   $python_libs = [
-    'libxslt1-dev',
     'libpq-dev',
     'python-psycopg2',
     'python-pastescript',
