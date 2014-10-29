@@ -483,29 +483,29 @@ class ckan::config(
     path      => "/usr/bin:/bin:/usr/sbin:/usr/local/node/node-default/bin",
   }
 
-#  exec { 'npm_deps_shared':
-#    command   => 'npm install',
-#    cwd       => '/vagrant/dgud7/shared_dguk_assets',
-#    user      => 'co',
-#    require   => [
-#      Python::Pip[$pip_pkgs_remote],
-#      Class['beluga::developer_tools'],
-#    ],
-#    creates   => '/src/shared_dguk_assets/node_modules',
-#    path      => '/usr/bin:/bin:/usr/sbin',
-#    logoutput => 'on_failure',
-#  } ->
-#  exec {'grunt_shared':
-#    command   => 'grunt',
-#    cwd       => '/vagrant/dgud7/shared_dguk_assets',
-#    user      => 'co',
-#    path      => '/usr/bin:/bin:/usr/sbin',
-#  }
+  exec { 'npm_deps_shared':
+    command   => 'npm install',
+    cwd       => '/vagrant/dgud7/shared_dguk_assets',
+    user      => 'co',
+    require   => [
+      Python::Pip[$pip_pkgs_remote],
+      Class['beluga::developer_tools'],
+    ],
+    creates   => '/src/shared_dguk_assets/node_modules',
+    path      => '/usr/bin:/bin:/usr/sbin',
+    logoutput => 'on_failure',
+  } ->
+  exec {'grunt_shared':
+    command   => 'grunt',
+    cwd       => '/vagrant/dgud7/shared_dguk_assets',
+    user      => 'co',
+    path      => '/usr/bin:/bin:/usr/sbin',
+  }
 
-  #file {'apache_ckan_conf':
-  #  ensure  => file,
-  #  path    => '/etc/apache2/sites-available/ckan.conf',
-  #  content => template('dgu_ckan/apache-ckan.erb'),
-  #}
+  file {'apache_ckan_conf':
+    ensure  => file,
+    path    => '/etc/apache2/sites-available/ckan.conf',
+    content => template('ckan/apache-ckan.erb'),
+  }
 
 }
