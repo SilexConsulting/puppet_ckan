@@ -14,14 +14,6 @@ class ckan::config(
   $pg_superuser_pass = $ckan::params::pg_superuser_pass,
   $postgis_version   = $ckan::params::postgis_version,
 ) {
-  include uwsgi
-
-  if ! defined(Package['libxslt1-dev'])       { package { 'libxslt1-dev':       ensure => present } }
-  if ! defined(Package['libpq-dev'])          { package { 'libpq-dev':          ensure => present } }
-  if ! defined(Package['python-psycopg2'])    { package { 'python-psycopg2':    ensure => present } }
-  if ! defined(Package['python-pastescript']) { package { 'python-pastescript': ensure => present } }
-  if ! defined(Package['libmemcached-dev'])   { package { 'libmemcached-dev':   ensure => present } }
-
   # List of python dependencies to be installed with pip
   $pip_pkgs_remote = [
     'amqplib==1.0.2',
@@ -140,36 +132,42 @@ class ckan::config(
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckan@release-v2.2-dgu',
     owner         => $ckan_user,
+    require       => Python::Virtualenv[$virtual_env_dir],
   }
 
   python::pip { 'ckanext-dgu':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-dgu@stable',
     owner         => $ckan_user,
+    require       => Python::Virtualenv[$virtual_env_dir],
   }
 
   python::pip { 'ckanext-os':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-os@master',
     owner         => $ckan_user,
+    require       => Python::Virtualenv[$virtual_env_dir],
   }
 
   python::pip { 'ckanext-qa':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-qa@2.0',
     owner         => $ckan_user,
+    require       => Python::Virtualenv[$virtual_env_dir],
   }
 
   python::pip { 'ckanext-spatial':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-spatial@dgu',
     owner         => $ckan_user,
+    require       => Python::Virtualenv[$virtual_env_dir],
   }
 
   python::pip { 'ckanext-harvest':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-harvest@2.0',
     owner         => $ckan_user,
+    require       => Python::Virtualenv[$virtual_env_dir],
   } ->
   python::pip { 'ckanext-archiver':
     virtualenv    => $virtual_env_dir,
@@ -181,41 +179,48 @@ class ckan::config(
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-report@master',
     owner         => $ckan_user,
+    require       => Python::Virtualenv[$virtual_env_dir],
   }
   python::pip { 'ckanext-ga-report':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-ga-report@master',
     owner         => $ckan_user,
+    require       => Python::Virtualenv[$virtual_env_dir],
   }
 
   python::pip { 'ckanext-datapreview':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-datapreview@master',
     owner         => $ckan_user,
+    require       => Python::Virtualenv[$virtual_env_dir],
   }
 
   python::pip { 'ckanext-importlib':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/okfn/ckanext-importlib@master',
     owner         => $ckan_user,
+    require       => Python::Virtualenv[$virtual_env_dir],
   }
 
   python::pip { 'ckanext-hierarchy':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-hierarchy@master',
     owner         => $ckan_user,
+    require       => Python::Virtualenv[$virtual_env_dir],
   }
 
   python::pip { 'logreporter':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-hierarchy@master',
     owner         => $ckan_user,
+    require       => Python::Virtualenv[$virtual_env_dir],
   }
 
   python::pip { 'ckanext-dgu-local':
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-dgu-local@master',
     owner         => $ckan_user,
+    require       => Python::Virtualenv[$virtual_env_dir],
   }
 
   file {$ckan_log_file:
@@ -352,7 +357,21 @@ class ckan::config(
       Class['postgresql::server'],
     ],
   }
-
+  
+  exec {'paster archiver init':
+#    subscribe => Exec['paster db init'],
+    command   => "${virtual_env_dir}/bin/paster --plugin=ckanext-archiver archiver init --config=${ckan_root}/ckan.ini",
+    path      => '/usr/bin:/bin:/usr/sbin',
+    user      => $ckan_user,
+    unless    => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep archival",
+    logoutput => 'on_failure',
+    require   => [
+      Python::Pip['Paste==1.7.5.1'],
+      Python::Pip['ckanext-archiver'],
+      Python::Virtualenv[$virtual_env_dir],
+      Ckan_config_file['ckan_ini_file'],
+    ],
+  } ->
   exec { 'paster db init':
     subscribe                  => [
       Exec["createdb ${ckan_db_name}"],
@@ -366,6 +385,9 @@ class ckan::config(
     require                    => [
       Python::Pip['psycopg2==2.4.5'],
       Python::Pip['ckanext-harvest'],
+      Python::Pip['Paste==1.7.5.1'],
+      Python::Virtualenv[$virtual_env_dir],
+      Ckan_config_file['ckan_ini_file'],
     ]
   }
 
@@ -377,6 +399,11 @@ class ckan::config(
     user                       => $ckan_user,
     unless                     => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep ga_url",
     logoutput                  => true,
+    require   => [
+      Python::Pip['Paste==1.7.5.1'],
+      Python::Virtualenv[$virtual_env_dir],
+      Ckan_config_file['ckan_ini_file'],
+    ],
   }
 
   exec { 'paster inventory init':
@@ -386,6 +413,11 @@ class ckan::config(
     user      => $ckan_user, #'www-data',
     unless    => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep ga_url",
     logoutput => true,
+    require   => [
+      Python::Pip['Paste==1.7.5.1'],
+      Python::Virtualenv[$virtual_env_dir],
+      Ckan_config_file['ckan_ini_file'],
+    ],
   }
 
   exec {'paster dgu_local init':
@@ -395,14 +427,11 @@ class ckan::config(
     user      => $ckan_user,
     unless    => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep organization_extent",
     logoutput => 'on_failure',
-  }
-  exec {'paster archiver init':
-    subscribe => Exec['paster db init'],
-    command   => "${virtual_env_dir}/bin/paster --plugin=ckanext-archiver archiver init --config=${ckan_root}/ckan.ini",
-    path      => '/usr/bin:/bin:/usr/sbin',
-    user      => $ckan_user,
-    unless    => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep archival",
-    logoutput => 'on_failure',
+    require   => [
+      Python::Pip['Paste==1.7.5.1'],
+      Python::Virtualenv[$virtual_env_dir],
+      Ckan_config_file['ckan_ini_file'],
+    ],
   }
   exec {'paster qa init':
     subscribe => Exec["paster db init"],
@@ -411,6 +440,11 @@ class ckan::config(
     user      => $ckan_user,
     unless    => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep qa",
     logoutput => 'on_failure',
+    require   => [
+      Python::Pip['Paste==1.7.5.1'],
+      Python::Virtualenv[$virtual_env_dir],
+      Ckan_config_file['ckan_ini_file'],
+    ],
   }
 
   class { 'ckan::vhost': }
@@ -432,10 +466,11 @@ class ckan::config(
   exec { 'npm_deps_dgu':
     command   => 'npm install',
     cwd       => "${virtual_env_dir}/src/ckanext-dgu",
-    user      => 'co',
+    user      => $ckan_user,
     require   => [
       Python::Pip[$pip_pkgs_remote],
       Class['beluga::developer_tools'],
+      Python::Virtualenv[$virtual_env_dir],
     ],
     creates   => '/src/ckanext-dgu/node_modules',
     path      => '/usr/bin:/bin:/usr/sbin:/usr/local/node/node-default/bin',
@@ -443,9 +478,9 @@ class ckan::config(
   } ->
   exec {'grunt_dgu':
     command   => 'grunt',
-    cwd       => '/src/ckanext-dgu',
-    user      => 'co',
-    path      => "/usr/bin:/bin:/usr/sbin",
+    cwd       => "${virtual_env_dir}/src/ckanext-dgu",
+    user      => $ckan_user,
+    path      => "/usr/bin:/bin:/usr/sbin:/usr/local/node/node-default/bin",
   }
 
 #  exec { 'npm_deps_shared':
