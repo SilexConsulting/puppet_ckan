@@ -1,7 +1,8 @@
 class ckan::install(){
+  include beluga::apache_frontend_server
+  include beluga::java
   include dgu_solr
   include uwsgi
-  include beluga::apache_frontend_server
 
   if ! defined(Package['libxslt1-dev'])       { package { 'libxslt1-dev':       ensure => present } }
   if ! defined(Package['libpq-dev'])          { package { 'libpq-dev':          ensure => present } }
