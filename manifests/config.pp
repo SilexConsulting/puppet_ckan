@@ -104,12 +104,6 @@ class ckan::config(
     'zope.interface==4.0.1',
   ]
 
-  python::pip { $pip_pkgs_remote:
-    virtualenv    => $virtual_env_dir,
-    ensure        => present,
-    owner         => $ckan_user,
-  }
-
   file { $virtual_env_dir:
     ensure => 'directory',
     owner  => 'root',
@@ -120,13 +114,17 @@ class ckan::config(
     path          => '/usr/bin:/usr/sbin:/bin',
     user          => 'root',
   }
-
   python::virtualenv { $virtual_env_dir:
     ensure        => present,
     owner         => $ckan_user,
     group         => $ckan_group,
-    require       => Exec["set ${virtual_env_dir} permissions"],
+  } ->
+  python::pip { $pip_pkgs_remote:
+    virtualenv    => $virtual_env_dir,
+    ensure        => present,
+    owner         => $ckan_user,
   }
+
 
   python::pip { 'ckan':
     virtualenv    => $virtual_env_dir,
@@ -270,11 +268,6 @@ class ckan::config(
     listen_addresses           => '*',
     ipv4acls                   => ['hostssl all johndoe 192.168.0.0/24 cert'],
     postgres_password          => $pg_superuser_pass,
-  }
-
-  package { 'postgresql-9.1-postgis':
-    ensure                     => present,
-    require                    => Class['postgresql::server'],
   }
 
   postgresql::server::role { $ckan_test_db_user:
@@ -451,11 +444,6 @@ class ckan::config(
 
   file { "${ckan_root}/wsgi_app.py":
     content => template('ckan/wsgi_app.py.erb'),
-  }
-
-  # @todo move this to its own module
-  package { 'rabbitmq-server':
-    ensure => present,
   }
 
   # Why use sudo here? There is some weird permissions thing running 'npm

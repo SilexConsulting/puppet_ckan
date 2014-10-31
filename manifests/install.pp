@@ -2,7 +2,23 @@ class ckan::install(){
   include beluga::apache_frontend_server
   include beluga::java
   include dgu_solr
-  include uwsgi
+  package { 'rabbitmq-server':
+    ensure => present,
+  }
+
+  package { 'postgresql-9.1-postgis':
+    ensure                     => present,
+    require                    => Class['postgresql::server'],
+  }
+
+  class { 'python':
+    dev                       => true,  # required for pip to install dependencies
+    pip                       => true,
+    version                   => 'system',
+    virtualenv                => true,
+  } ->
+  class {'uwsgi':
+  }
 
   if ! defined(Package['libxslt1-dev'])       { package { 'libxslt1-dev':       ensure => present } }
   if ! defined(Package['libpq-dev'])          { package { 'libpq-dev':          ensure => present } }
