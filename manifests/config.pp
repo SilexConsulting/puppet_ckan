@@ -113,7 +113,7 @@ class ckan::config(
     command => "chown -R ${ckan_user}:${ckan_group} ${virtual_env_dir}",
     path          => '/usr/bin:/usr/sbin:/bin',
     user          => 'root',
-  }
+  } ->
   python::virtualenv { $virtual_env_dir:
     ensure        => present,
     owner         => $ckan_user,
