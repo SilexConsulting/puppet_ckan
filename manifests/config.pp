@@ -393,7 +393,7 @@ class ckan::config(
     unless                     => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep ga_url",
     logoutput                  => true,
     require   => [
-      Python::Pip['Paste==1.7.5.1'],
+      Python::Pip['Paste==1.7.5.1', 'ckanext-ga-report'],
       Python::Virtualenv[$virtual_env_dir],
       Ckan_config_file['ckan_ini_file'],
     ],
@@ -407,7 +407,7 @@ class ckan::config(
     unless    => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep ga_url",
     logoutput => true,
     require   => [
-      Python::Pip['Paste==1.7.5.1'],
+      Python::Pip['Paste==1.7.5.1', 'ckanext-dgu'],
       Python::Virtualenv[$virtual_env_dir],
       Ckan_config_file['ckan_ini_file'],
     ],
@@ -421,7 +421,7 @@ class ckan::config(
     unless    => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep organization_extent",
     logoutput => 'on_failure',
     require   => [
-      Python::Pip['Paste==1.7.5.1'],
+      Python::Pip['Paste==1.7.5.1', 'ckanext-dgu-local'],
       Python::Virtualenv[$virtual_env_dir],
       Ckan_config_file['ckan_ini_file'],
     ],
@@ -434,7 +434,7 @@ class ckan::config(
     unless    => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep qa",
     logoutput => 'on_failure',
     require   => [
-      Python::Pip['Paste==1.7.5.1'],
+      Python::Pip['Paste==1.7.5.1', 'ckanext-qa'],
       Python::Virtualenv[$virtual_env_dir],
       Ckan_config_file['ckan_ini_file'],
     ],
