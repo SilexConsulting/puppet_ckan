@@ -16,6 +16,7 @@ class ckan::config(
 ) {
   # List of python dependencies to be installed with pip
   $pip_pkgs_remote = [
+    'setuptools==9.1',
     'Babel==0.9.6',
     'Beaker==1.6.3',
     'ConcurrentLogHandler==0.9.1',
@@ -28,7 +29,8 @@ class ckan::config(
     'Jinja2==2.7',
     'Mako==0.8.1',
     'MarkupSafe==0.15',
-    'PIL==1.1.7',
+    'OWSLib',
+    'Pillow==2.7.0',
     'Pairtree==0.7.1-T',
     'Paste==1.7.5.1',
     'PasteDeploy==1.5.0',
@@ -80,7 +82,7 @@ class ckan::config(
     'ofs==0.4.1',
     'openpyxl==1.5.7',
     'pep8==1.4.6',
-    'progressbar==2.3',
+    'progressbar==2.2',
     'psycopg2==2.4.5',
     'py==1.4.18',
     'pylibmc==1.2.3',
@@ -114,11 +116,6 @@ class ckan::config(
     'zope.interface==4.0.1',
   ]
 
-  exec { "set ${virtual_env_dir} permissions":
-    command => "chown -R ${ckan_user}:${ckan_group} ${virtual_env_dir}",
-    path          => '/usr/bin:/usr/sbin:/bin',
-    user          => 'root',
-  } ->
   python::virtualenv { $virtual_env_dir:
     ensure        => present,
     owner         => $ckan_user,
