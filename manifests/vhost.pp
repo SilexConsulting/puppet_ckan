@@ -1,7 +1,7 @@
 class ckan::vhost (
   $ckan_log_root = $ckan::params::ckan_log_root,
 ) {
-  apache::vhost { 'localhost':
+  apache::vhost { 'ckan':
     # WSGIDaemonProcess singlethreaded
     wsgi_daemon_process => 'singlethreaded',
     # WSGIProcessGroup singlethreaded

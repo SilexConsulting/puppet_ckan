@@ -116,10 +116,16 @@ class ckan::config(
     'zope.interface==4.0.1',
   ]
 
+
   python::virtualenv { $virtual_env_dir:
     ensure        => present,
     owner         => $ckan_user,
     group         => $ckan_group,
+  } ->
+  exec { "set ${virtual_env_dir} permissions":
+    command => "chown -R ${ckan_user}:${ckan_group} ${virtual_env_dir}",
+    path          => '/usr/bin:/usr/sbin:/bin',
+    user          => 'root',
   } ->
   python::pip { $pip_pkgs_remote:
     virtualenv    => $virtual_env_dir,
@@ -473,6 +479,12 @@ class ckan::config(
     path      => "/usr/bin:/bin:/usr/sbin:/usr/local/node/node-default/bin",
   }
 
+  vcsrepo { "/vagrant/dgud7/shared_dguk_assets":
+    ensure => present,
+    provider => git,
+    source => 'https://github.com/datagovuk/shared_dguk_assets.git',
+    revision => 'master'
+  } ->
   exec { 'npm_deps_shared':
     command   => 'npm install',
     cwd       => '/vagrant/dgud7/shared_dguk_assets',
