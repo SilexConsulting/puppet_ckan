@@ -1,18 +1,21 @@
 class ckan::vhost (
-  $ckan_log_root = $ckan::params::ckan_log_root,
+
 ) {
   apache::vhost { 'ckan':
-    # WSGIDaemonProcess singlethreaded
-    wsgi_daemon_process => 'singlethreaded',
-    # WSGIProcessGroup singlethreaded
-    wsgi_process_group  => 'singlethreaded',
-    # WSGIScriptAlias / ${ckan_root}/wsgi_app.py
-    wsgi_script_aliases => { '/' => "${ckan_root}/wsgi_app.py", },
-    # WSGIPassAuthorization On
-    custom_fragment     => 'WSGIPassAuthorization On',
-    port                => 80,
-    log_level           => 'warn',
-    docroot             => '/var/www/ckan',
+    port                        => 80,
+    docroot                     => '/var/ckan/',
     logroot             => $ckan_log_root,
+    wsgi_application_group      => '%{GLOBAL}',
+    wsgi_daemon_process         => 'wsgi',
+    wsgi_daemon_process_options => {
+      processes    => '2',
+      threads      => '15',
+      display-name => '%{GROUP}',
+    },
+    wsgi_import_script          => "${ckan_root}/wsgi_app.py",
+    wsgi_import_script_options  =>
+      { process-group => 'wsgi', application-group => '%{GLOBAL}' },
+    wsgi_process_group          => 'wsgi',
+    wsgi_script_aliases         => { '/' => '/var/ckan/wsgi_app.py'},
   }
 }

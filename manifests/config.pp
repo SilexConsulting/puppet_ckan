@@ -503,4 +503,5 @@ class ckan::config(
     user      => 'co',
     path      => '/usr/bin:/bin:/usr/sbin:/usr/local/node/node-default/bin',
   }
+
 }
