@@ -503,11 +503,4 @@ class ckan::config(
     user      => 'co',
     path      => '/usr/bin:/bin:/usr/sbin:/usr/local/node/node-default/bin',
   }
-
-  file {'apache_ckan_conf':
-    ensure  => file,
-    path    => '/etc/apache2/sites-available/ckan.conf',
-    content => template('ckan/apache-ckan.erb'),
-  }
-
 }
