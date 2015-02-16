@@ -3,7 +3,7 @@ class ckan::params {
   $ckan_config       = '/etc/ckan'
   $ckan_log_root     = '/var/log/ckan'
   $ckan_user         = 'co'
-  $ckan_group        = 'co'
+  $ckan_group        = 'www-data'
   $ckan_root         = '/var/ckan'
   $ckan_db_name      = 'ckan'
   $ckan_db_user      = 'dgu'

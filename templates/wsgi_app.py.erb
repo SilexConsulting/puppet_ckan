@@ -1,6 +1,6 @@
 import os
-pyenv_bin_dir = '<%= @ckan_virtualenv %>/bin'
-config_filepath = '<%= @ckan_ini %>'
+pyenv_bin_dir = '<%= @virtual_env_dir %>/bin'
+config_filepath = '<%= @ckan_root %>/ckan.ini'
 activate_this = os.path.join(pyenv_bin_dir, 'activate_this.py')
 execfile(activate_this, dict(__file__=activate_this))
 from paste.deploy import loadapp
