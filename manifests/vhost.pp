@@ -9,7 +9,7 @@ class ckan::vhost (
     wsgi_daemon_process         => 'wsgi',
     wsgi_import_script          => "${ckan_root}/wsgi_app.py",
     wsgi_import_script_options  =>
-      { process-group => 'wsgi',z application-group => '%{GLOBAL}' },
+      { process-group => 'wsgi', application-group => '%{GLOBAL}' },
     wsgi_process_group          => 'wsgi',
     custom_fragment             => 'WSGIPassAuthorization On',
     wsgi_script_aliases         => { '/' => '/var/ckan/wsgi_app.py'},
