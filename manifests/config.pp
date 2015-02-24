@@ -13,6 +13,10 @@ class ckan::config(
   $ckan_test_db_name = $ckan::params::ckan_test_db_name,
   $pg_superuser_pass = $ckan::params::pg_superuser_pass,
   $postgis_version   = $ckan::params::postgis_version,
+  $apache_vhost,
+  $apache_port,
+  $nginx_vhost,
+  $nginx_port,
 ) {
   # List of python dependencies to be installed with pip
   $pip_pkgs_remote = [
@@ -448,7 +452,12 @@ class ckan::config(
     ],
   }
 
-  class { 'ckan::vhost': }
+  class { 'ckan::vhost':
+    nginx_vhost => $nginx_vhost,
+    nginx_port => $nginx_port,
+    apache_vhost => $apache_vhost,
+    apache_port => $apache_port,
+  }
 
   file { "${ckan_root}/wsgi_app.py":
     content => template('ckan/wsgi_app.py.erb'),

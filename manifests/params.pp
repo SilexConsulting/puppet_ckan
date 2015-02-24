@@ -14,6 +14,10 @@ class ckan::params {
   $ckan_test_db_name = 'ckan_test'
   $pg_superuser_pass = 'pass'
   $postgis_version   = '9.1'
+  $nginx_vhost       = 'ckan'
+  $nginx_port        = 80
+  $apache_vhost       = 'ckan'
+  $apache_port       = 8000
 
   case $::osfamily {
     'Debian': {
