@@ -183,6 +183,11 @@ class ckan::config(
     virtualenv    => $virtual_env_dir,
     url           => '-e git+https://github.com/datagovuk/ckanext-archiver@master',
     owner         => $ckan_user,
+    require                    => [
+      Python::Pip['ckanext-ga-report'],
+      Python::Pip['ckanext-harvest'],
+      Python::Virtualenv[$virtual_env_dir],
+    ]
   }
 
   python::pip { 'ckanext-report':
@@ -486,6 +491,7 @@ class ckan::config(
     cwd       => "${virtual_env_dir}/src/ckanext-dgu",
     user      => $ckan_user,
     path      => "/usr/bin:/bin:/usr/sbin:/usr/local/node/node-default/bin",
+    require   => [Python::Pip['ckanext-dgu']]
   }
 
   vcsrepo { "/vagrant/dgud7/shared_dguk_assets":
