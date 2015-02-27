@@ -131,7 +131,6 @@ class ckan::config(
     path          => '/usr/bin:/usr/sbin:/bin',
     user          => 'root',
   } ->
-  exec {'restart tomcat '}
   python::pip { $pip_pkgs_remote:
     virtualenv    => $virtual_env_dir,
     ensure        => present,
