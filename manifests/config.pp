@@ -426,6 +426,7 @@ class ckan::config(
     logoutput => true,
     require   => [
       Class['dgu_solr'],
+      Service[tomcat7],
       Python::Pip['Paste==1.7.5.1', 'ckanext-dgu'],
       Python::Virtualenv[$virtual_env_dir],
       Ckan_config_file['ckan_ini_file'],
@@ -441,6 +442,7 @@ class ckan::config(
     logoutput => 'on_failure',
     require   => [
       Class['dgu_solr'],
+      Service[tomcat7],
       Python::Pip['Paste==1.7.5.1', 'ckanext-dgu-local'],
       Python::Virtualenv[$virtual_env_dir],
       Ckan_config_file['ckan_ini_file'],
@@ -455,6 +457,7 @@ class ckan::config(
     logoutput => 'on_failure',
     require   => [
       Class['dgu_solr'],
+      Service[tomcat7],
       Python::Pip['Paste==1.7.5.1', 'ckanext-qa'],
       Python::Virtualenv[$virtual_env_dir],
       Ckan_config_file['ckan_ini_file'],
