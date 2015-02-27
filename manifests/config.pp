@@ -131,6 +131,7 @@ class ckan::config(
     path          => '/usr/bin:/usr/sbin:/bin',
     user          => 'root',
   } ->
+  exec {'restart tomcat '}
   python::pip { $pip_pkgs_remote:
     virtualenv    => $virtual_env_dir,
     ensure        => present,
@@ -376,6 +377,7 @@ class ckan::config(
     unless    => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep archival",
     logoutput => 'on_failure',
     require   => [
+      Service[tomcat7],
       Python::Pip['Paste==1.7.5.1'],
       Python::Pip['ckanext-archiver'],
       Python::Virtualenv[$virtual_env_dir],
@@ -393,6 +395,7 @@ class ckan::config(
     unless                     => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep package",
     logoutput                  => true,
     require                    => [
+      Service[tomcat7],
       Python::Pip['psycopg2==2.4.5'],
       Python::Pip['ckanext-harvest'],
       Python::Pip['Paste==1.7.5.1'],
@@ -410,6 +413,7 @@ class ckan::config(
     unless                     => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep ga_url",
     logoutput                  => true,
     require   => [
+      Service[tomcat7],
       Class['dgu_solr'],
       Python::Pip['Paste==1.7.5.1', 'ckanext-ga-report'],
       Python::Virtualenv[$virtual_env_dir],
@@ -425,7 +429,6 @@ class ckan::config(
     unless    => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep ga_url",
     logoutput => true,
     require   => [
-      Class['dgu_solr'],
       Service[tomcat7],
       Python::Pip['Paste==1.7.5.1', 'ckanext-dgu'],
       Python::Virtualenv[$virtual_env_dir],
@@ -441,7 +444,6 @@ class ckan::config(
     unless    => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep organization_extent",
     logoutput => 'on_failure',
     require   => [
-      Class['dgu_solr'],
       Service[tomcat7],
       Python::Pip['Paste==1.7.5.1', 'ckanext-dgu-local'],
       Python::Virtualenv[$virtual_env_dir],
@@ -456,7 +458,6 @@ class ckan::config(
     unless    => "sudo -u postgres psql -d ${ckan_db_name} -c \"\\dt\" | grep qa",
     logoutput => 'on_failure',
     require   => [
-      Class['dgu_solr'],
       Service[tomcat7],
       Python::Pip['Paste==1.7.5.1', 'ckanext-qa'],
       Python::Virtualenv[$virtual_env_dir],
